@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'screens/task_screen.dart';
 import 'screens/expense_screen.dart';
 import 'screens/stats_screen.dart';
@@ -18,17 +19,12 @@ void main() async {
   runApp(const MyApp());
 }
 
-// Tema renkleri
 class AppThemes {
-  static const themes = {
-    'Mor (Varsayılan)': Colors.indigo,
-    'Mavi': Colors.blue,
-    'Yeşil': Colors.green,
-    'Turuncu': Colors.orange,
-    'Kırmızı': Colors.red,
-    'Pembe': Colors.pink,
-    'Teal': Colors.teal,
-    'Mor Açık': Colors.purple,
+  static const Map<String, Color> themes = {
+    'Okyanus': Color(0xFF1565C0),
+    'Orman': Color(0xFF2E7D32),
+    'Gün Batımı': Color(0xFFBF360C),
+    'Lavanta': Color(0xFF6A1B9A),
   };
 }
 
@@ -44,13 +40,20 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.system;
-  Color _seedColor = Colors.indigo;
+  Color _seedColor = const Color(0xFF1565C0);
+  String _themeName = 'Okyanus';
 
   void setThemeMode(ThemeMode mode) =>
       setState(() => _themeMode = mode);
 
-  void setSeedColor(Color color) =>
-      setState(() => _seedColor = color);
+  void setSeedColor(Color color, String name) =>
+      setState(() {
+        _seedColor = color;
+        _themeName = name;
+      });
+
+  ThemeMode get themeMode => _themeMode;
+  String get themeName => _themeName;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +61,15 @@ class _MyAppState extends State<MyApp> {
       title: 'TaskFlow',
       debugShowCheckedModeBanner: false,
       themeMode: _themeMode,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('tr', 'TR'),
+        Locale('en', 'US'),
+      ],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
             seedColor: _seedColor, brightness: Brightness.light),
@@ -96,7 +108,8 @@ class _MainScreenState extends State<MainScreen> {
       body: _screens[_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (i) => setState(() => _currentIndex = i),
+        onDestinationSelected: (i) =>
+            setState(() => _currentIndex = i),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.checklist_outlined),

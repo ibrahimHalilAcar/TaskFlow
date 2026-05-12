@@ -54,7 +54,8 @@ class _TaskScreenState extends State<TaskScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Hata: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Hata: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -76,7 +77,6 @@ class _TaskScreenState extends State<TaskScreen> {
     await _loadTasks();
   }
 
-  // ── EKLEME BOTTOM SHEET ──
   void _showAddSheet() {
     _titleController.clear();
     _descController.clear();
@@ -101,13 +101,12 @@ class _TaskScreenState extends State<TaskScreen> {
             return;
           }
           await _addTask();
-          if (mounted) Navigator.pop(ctx);
+          if (ctx.mounted) Navigator.pop(ctx);
         },
       ),
     );
   }
 
-  // ── DÜZENLEME BOTTOM SHEET ──
   void _showEditSheet(Task task) {
     _titleController.text = task.title;
     _descController.text = task.description ?? '';
@@ -131,6 +130,7 @@ class _TaskScreenState extends State<TaskScreen> {
               ? null
               : _descController.text.trim();
           task.priority = _selectedPriority;
+          task.createdAt = _selectedDate;
           await _updateTask(task);
           if (ctx.mounted) Navigator.pop(ctx);
         },
@@ -138,18 +138,20 @@ class _TaskScreenState extends State<TaskScreen> {
     );
   }
 
-  // ── DETAY DİALOG ──
   void _showDetailDialog(Task task) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
-            Icon(Icons.flag, color: _priorityColor(task.priority), size: 20),
+            Icon(Icons.flag,
+                color: _priorityColor(task.priority), size: 20),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(task.title, style: const TextStyle(fontSize: 16)),
+              child: Text(task.title,
+                  style: const TextStyle(fontSize: 16)),
             ),
           ],
         ),
@@ -157,7 +159,8 @@ class _TaskScreenState extends State<TaskScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (task.description != null && task.description!.isNotEmpty) ...[
+            if (task.description != null &&
+                task.description!.isNotEmpty) ...[
               const Text('Açıklama',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -167,42 +170,37 @@ class _TaskScreenState extends State<TaskScreen> {
               Text(task.description!),
               const Divider(height: 20),
             ],
-            Row(
-              children: [
-                const Icon(Icons.flag_outlined, size: 16, color: Colors.grey),
-                const SizedBox(width: 6),
-                Text('Öncelik: ${_priorityLabel(task.priority)}'),
-              ],
-            ),
+            Row(children: [
+              const Icon(Icons.flag_outlined,
+                  size: 16, color: Colors.grey),
+              const SizedBox(width: 6),
+              Text('Öncelik: ${_priorityLabel(task.priority)}'),
+            ]),
             const SizedBox(height: 6),
-            Row(
-              children: [
-                Icon(
-                  task.isCompleted
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
-                  size: 16,
-                  color: task.isCompleted ? Colors.green : Colors.grey,
-                ),
-                const SizedBox(width: 6),
-                Text(task.isCompleted ? 'Tamamlandı' : 'Devam ediyor'),
-              ],
-            ),
+            Row(children: [
+              Icon(
+                task.isCompleted
+                    ? Icons.check_circle
+                    : Icons.radio_button_unchecked,
+                size: 16,
+                color: task.isCompleted ? Colors.green : Colors.grey,
+              ),
+              const SizedBox(width: 6),
+              Text(task.isCompleted ? 'Tamamlandı' : 'Devam ediyor'),
+            ]),
             const SizedBox(height: 6),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                const SizedBox(width: 6),
-                Text(
-                  '${task.createdAt.day}.${task.createdAt.month}.${task.createdAt.year}',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
+            Row(children: [
+              const Icon(Icons.calendar_today,
+                  size: 16, color: Colors.grey),
+              const SizedBox(width: 6),
+              Text(
+                '${task.createdAt.day}.${task.createdAt.month}.${task.createdAt.year}',
+                style: const TextStyle(color: Colors.grey),
+              ),
+            ]),
           ],
         ),
         actions: [
-          // Sil butonu
           TextButton.icon(
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             icon: const Icon(Icons.delete_outline, size: 18),
@@ -212,7 +210,6 @@ class _TaskScreenState extends State<TaskScreen> {
               await _deleteTask(task.id!);
             },
           ),
-          // Düzenle butonu
           TextButton.icon(
             icon: const Icon(Icons.edit_outlined, size: 18),
             label: const Text('Düzenle'),
@@ -221,14 +218,17 @@ class _TaskScreenState extends State<TaskScreen> {
               _showEditSheet(task);
             },
           ),
-          // Tamamla/Geri al
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: task.isCompleted ? Colors.orange : Colors.green,
+              backgroundColor:
+                  task.isCompleted ? Colors.orange : Colors.green,
               foregroundColor: Colors.white,
             ),
-            icon: Icon(task.isCompleted ? Icons.undo : Icons.check, size: 18),
-            label: Text(task.isCompleted ? 'Geri Al' : 'Tamamla'),
+            icon: Icon(
+                task.isCompleted ? Icons.undo : Icons.check,
+                size: 18),
+            label: Text(
+                task.isCompleted ? 'Geri Al' : 'Tamamla'),
             onPressed: () async {
               await _toggleTask(task);
               if (ctx.mounted) Navigator.pop(ctx);
@@ -239,15 +239,15 @@ class _TaskScreenState extends State<TaskScreen> {
     );
   }
 
-  // ── ORTAK FORM WİDGET ──
+  // onSubmit tipi Future<void> Function() olarak değişti
   Widget _taskForm({
     required BuildContext ctx,
     required String title,
     required String buttonLabel,
-    required VoidCallback onSubmit,
+    required Future<void> Function() onSubmit,
   }) {
     return StatefulBuilder(
-      builder: (ctx, setModalState) => Padding(
+      builder: (ctx, setModalState) => SingleChildScrollView(
         padding: EdgeInsets.only(
           left: 20,
           right: 20,
@@ -258,7 +258,6 @@ class _TaskScreenState extends State<TaskScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Başlık satırı
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -273,15 +272,14 @@ class _TaskScreenState extends State<TaskScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Başlık alanı
             TextField(
               controller: _titleController,
               decoration: InputDecoration(
                 labelText: 'Görev Başlığı *',
                 hintText: 'Örn: Matematik ödevi',
                 prefixIcon: const Icon(Icons.title),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 filled: true,
               ),
               autofocus: true,
@@ -289,22 +287,23 @@ class _TaskScreenState extends State<TaskScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Açıklama alanı
             TextField(
               controller: _descController,
               decoration: InputDecoration(
                 labelText: 'Açıklama (isteğe bağlı)',
                 hintText: 'Detayları buraya yaz...',
                 prefixIcon: const Icon(Icons.notes),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12)),
                 filled: true,
               ),
               maxLines: 3,
               textCapitalization: TextCapitalization.sentences,
             ),
-             const SizedBox(height: 12),
-            const Text('Tarih', style: TextStyle(fontWeight: FontWeight.w500)),
+            const SizedBox(height: 12),
+
+            const Text('Tarih',
+                style: TextStyle(fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () async {
@@ -313,15 +312,14 @@ class _TaskScreenState extends State<TaskScreen> {
                   initialDate: _selectedDate,
                   firstDate: DateTime(2020),
                   lastDate: DateTime(2030),
-                  locale: const Locale('tr', 'TR'),
                 );
                 if (picked != null) {
                   setModalState(() => _selectedDate = picked);
                 }
               },
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 14),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey.shade400),
                   borderRadius: BorderRadius.circular(12),
@@ -336,29 +334,31 @@ class _TaskScreenState extends State<TaskScreen> {
                       style: const TextStyle(fontSize: 15),
                     ),
                     const Spacer(),
-                    const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                    const Icon(Icons.arrow_drop_down,
+                        color: Colors.grey),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: 12),
 
-            // Öncelik seçimi
             const Text('Öncelik',
                 style: TextStyle(fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
             Row(
               children: [
-                _priorityChip('Düşük', 'low', Colors.green, setModalState),
+                _priorityChip(
+                    'Düşük', 'low', Colors.green, setModalState),
                 const SizedBox(width: 8),
-                _priorityChip('Orta', 'medium', Colors.orange, setModalState),
+                _priorityChip(
+                    'Orta', 'medium', Colors.orange, setModalState),
                 const SizedBox(width: 8),
-                _priorityChip('Yüksek', 'high', Colors.red, setModalState),
+                _priorityChip(
+                    'Yüksek', 'high', Colors.red, setModalState),
               ],
             ),
             const SizedBox(height: 20),
 
-            // Gönder butonu
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -367,8 +367,10 @@ class _TaskScreenState extends State<TaskScreen> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
                 ),
-                icon: Icon(buttonLabel == 'Ekle' ? Icons.add : Icons.save),
-                label: Text(buttonLabel, style: const TextStyle(fontSize: 16)),
+                icon: Icon(
+                    buttonLabel == 'Ekle' ? Icons.add : Icons.save),
+                label: Text(buttonLabel,
+                    style: const TextStyle(fontSize: 16)),
                 onPressed: onSubmit,
               ),
             ),
@@ -378,9 +380,8 @@ class _TaskScreenState extends State<TaskScreen> {
     );
   }
 
-  // ── YARDIMCI WİDGET VE FONKSİYONLAR ──
-  Widget _priorityChip(
-      String label, String value, Color color, StateSetter setModalState) {
+  Widget _priorityChip(String label, String value, Color color,
+      StateSetter setModalState) {
     final isSelected = _selectedPriority == value;
     return Expanded(
       child: GestureDetector(
@@ -407,23 +408,17 @@ class _TaskScreenState extends State<TaskScreen> {
 
   Color _priorityColor(String p) {
     switch (p) {
-      case 'high':
-        return Colors.red;
-      case 'medium':
-        return Colors.orange;
-      default:
-        return Colors.green;
+      case 'high': return Colors.red;
+      case 'medium': return Colors.orange;
+      default: return Colors.green;
     }
   }
 
   String _priorityLabel(String p) {
     switch (p) {
-      case 'high':
-        return 'Yüksek';
-      case 'medium':
-        return 'Orta';
-      default:
-        return 'Düşük';
+      case 'high': return 'Yüksek';
+      case 'medium': return 'Orta';
+      default: return 'Düşük';
     }
   }
 
@@ -433,8 +428,7 @@ class _TaskScreenState extends State<TaskScreen> {
       child: Row(
         children: [
           Container(
-            width: 4,
-            height: 18,
+            width: 4, height: 18,
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(2),
@@ -442,18 +436,21 @@ class _TaskScreenState extends State<TaskScreen> {
           ),
           const SizedBox(width: 8),
           Text(label,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 14)),
           const SizedBox(width: 6),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const EdgeInsets.symmetric(
+                horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: color.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text('$count',
                 style: TextStyle(
-                    fontSize: 12, color: color, fontWeight: FontWeight.bold)),
+                    fontSize: 12,
+                    color: color,
+                    fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -464,7 +461,6 @@ class _TaskScreenState extends State<TaskScreen> {
   Widget build(BuildContext context) {
     final pending = _tasks.where((t) => !t.isCompleted).toList();
     final completed = _tasks.where((t) => t.isCompleted).toList();
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Görevlerim'),
@@ -474,7 +470,8 @@ class _TaskScreenState extends State<TaskScreen> {
             padding: const EdgeInsets.only(right: 12),
             child: Chip(
               label: Text('${pending.length} bekliyor'),
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              backgroundColor:
+                  Theme.of(context).colorScheme.primaryContainer,
             ),
           ),
         ],
@@ -489,14 +486,16 @@ class _TaskScreenState extends State<TaskScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.checklist, size: 80, color: Colors.grey.shade300),
+                  Icon(Icons.checklist,
+                      size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
                   Text('Henüz görev yok',
-                      style:
-                          TextStyle(fontSize: 18, color: Colors.grey.shade500)),
+                      style: TextStyle(
+                          fontSize: 18, color: Colors.grey.shade500)),
                   const SizedBox(height: 8),
                   Text('Aşağıdaki butona bas ve ekle!',
-                      style: TextStyle(color: Colors.grey.shade400)),
+                      style:
+                          TextStyle(color: Colors.grey.shade400)),
                 ],
               ),
             )
@@ -504,11 +503,13 @@ class _TaskScreenState extends State<TaskScreen> {
               padding: const EdgeInsets.only(bottom: 90),
               children: [
                 if (pending.isNotEmpty) ...[
-                  _listHeader('Devam Ediyor', pending.length, Colors.orange),
+                  _listHeader(
+                      'Devam Ediyor', pending.length, Colors.orange),
                   ...pending.map((t) => _taskTile(t)),
                 ],
                 if (completed.isNotEmpty) ...[
-                  _listHeader('Tamamlandı', completed.length, Colors.green),
+                  _listHeader(
+                      'Tamamlandı', completed.length, Colors.green),
                   ...completed.map((t) => _taskTile(t)),
                 ],
               ],
@@ -532,7 +533,8 @@ class _TaskScreenState extends State<TaskScreen> {
                 child: const Text('İptal')),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red, foregroundColor: Colors.white),
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white),
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text('Sil'),
             ),
@@ -552,14 +554,17 @@ class _TaskScreenState extends State<TaskScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.delete, color: Colors.white),
-            Text('Sil', style: TextStyle(color: Colors.white, fontSize: 12)),
+            Text('Sil',
+                style:
+                    TextStyle(color: Colors.white, fontSize: 12)),
           ],
         ),
       ),
       child: GestureDetector(
         onTap: () => _showDetailDialog(task),
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          margin: const EdgeInsets.symmetric(
+              horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
@@ -577,23 +582,27 @@ class _TaskScreenState extends State<TaskScreen> {
             ],
           ),
           child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12, vertical: 4),
             leading: GestureDetector(
               onTap: () => _toggleTask(task),
               child: Container(
-                width: 28,
-                height: 28,
+                width: 28, height: 28,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: task.isCompleted ? Colors.green : Colors.transparent,
+                  color: task.isCompleted
+                      ? Colors.green
+                      : Colors.transparent,
                   border: Border.all(
-                    color: task.isCompleted ? Colors.green : Colors.grey,
+                    color: task.isCompleted
+                        ? Colors.green
+                        : Colors.grey,
                     width: 2,
                   ),
                 ),
                 child: task.isCompleted
-                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    ? const Icon(Icons.check,
+                        size: 16, color: Colors.white)
                     : null,
               ),
             ),
@@ -601,25 +610,29 @@ class _TaskScreenState extends State<TaskScreen> {
               task.title,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                decoration:
-                    task.isCompleted ? TextDecoration.lineThrough : null,
+                decoration: task.isCompleted
+                    ? TextDecoration.lineThrough
+                    : null,
                 color: task.isCompleted ? Colors.grey : null,
               ),
             ),
-            subtitle: task.description != null && task.description!.isNotEmpty
+            subtitle: task.description != null &&
+                    task.description!.isNotEmpty
                 ? Text(
                     task.description!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: Colors.grey.shade500,
-                      decoration:
-                          task.isCompleted ? TextDecoration.lineThrough : null,
+                      decoration: task.isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
                     ),
                   )
                 : null,
             trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(8),
@@ -627,7 +640,9 @@ class _TaskScreenState extends State<TaskScreen> {
               child: Text(
                 _priorityLabel(task.priority),
                 style: TextStyle(
-                    fontSize: 11, color: color, fontWeight: FontWeight.w600),
+                    fontSize: 11,
+                    color: color,
+                    fontWeight: FontWeight.w600),
               ),
             ),
           ),

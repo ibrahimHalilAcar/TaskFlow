@@ -11,24 +11,41 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notifications = true;
-  String _selectedThemeName = 'Mor (Varsayılan)';
+  String _selectedThemeName = 'Okyanus';
   ThemeMode _themeMode = ThemeMode.system;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final app = MyApp.of(context);
+      if (app != null) {
+        setState(() {
+          _selectedThemeName = app.themeName;
+          _themeMode = app.themeMode;
+        });
+      }
+    });
+  }
 
   Future<void> _clearAllData() async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Tüm Verileri Sil'),
-        content: const Text('Tüm görev ve harcamalar silinecek. Emin misin?'),
+        content: const Text(
+            'Tüm görev ve harcamalar silinecek. Emin misin?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('İptal'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sil', style: TextStyle(color: Colors.white)),
+            child: const Text('Sil',
+                style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -46,230 +63,445 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showThemeColorPicker() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Renk Teması Seç',
-                style:
-                    TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: AppThemes.themes.entries.map((entry) {
-                final isSelected = _selectedThemeName == entry.key;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() => _selectedThemeName = entry.key);
-                    MyApp.of(context)?.setSeedColor(entry.value);
-                    Navigator.pop(ctx);
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            const Text('Uygulamanın genel renk temasını seç',
+                style: TextStyle(
+                    fontSize: 13, color: Colors.grey)),
+            const SizedBox(height: 20),
+            ...AppThemes.themes.entries.map((entry) {
+              final isSelected =
+                  _selectedThemeName == entry.key;
+              final color = entry.value;
+              final scheme = ColorScheme.fromSeed(
+                  seedColor: color,
+                  brightness: Brightness.light);
+
+              return GestureDetector(
+                onTap: () {
+                  setState(
+                      () => _selectedThemeName = entry.key);
+                  MyApp.of(context)
+                      ?.setSeedColor(color, entry.key);
+                  Navigator.pop(ctx);
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? color.withOpacity(0.08)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected
+                          ? color
+                          : Colors.grey.shade300,
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Row(
                     children: [
                       Container(
-                        width: 52,
-                        height: 52,
+                        width: 48,
+                        height: 48,
                         decoration: BoxDecoration(
-                          color: entry.value,
-                          shape: BoxShape.circle,
-                          border: isSelected
-                              ? Border.all(
-                                  color: Colors.black, width: 3)
-                              : null,
+                          color: color,
+                          borderRadius:
+                              BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: entry.value.withOpacity(0.4),
+                              color: color.withOpacity(0.4),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
                           ],
                         ),
-                        child: isSelected
-                            ? const Icon(Icons.check,
-                                color: Colors.white, size: 24)
-                            : null,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        entry.key.split(' ').first,
-                        style: const TextStyle(fontSize: 11),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            Text(entry.key,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: isSelected
+                                      ? color
+                                      : null,
+                                )),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                _colorDot(scheme.primary),
+                                _colorDot(scheme.secondary),
+                                _colorDot(scheme.tertiary),
+                                _colorDot(
+                                    scheme.primaryContainer),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
+                      if (isSelected)
+                        Icon(Icons.check_circle,
+                            color: color, size: 24),
                     ],
                   ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 8),
+                ),
+              );
+            }),
           ],
         ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ayarlar'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+  Widget _colorDot(Color color) {
+    return Container(
+      width: 16,
+      height: 16,
+      margin: const EdgeInsets.only(right: 4),
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
       ),
-      body: ListView(
-        children: [
-          const SizedBox(height: 8),
+    );
+  }
 
-          // Görünüm
-          _sectionHeader('Görünüm'),
-
-          // Renk teması
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor:
-                  AppThemes.themes[_selectedThemeName] ?? Colors.indigo,
-              radius: 16,
-              child: const Icon(Icons.palette,
-                  color: Colors.white, size: 16),
-            ),
-            title: const Text('Renk Teması'),
-            subtitle: Text(_selectedThemeName),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-            onTap: _showThemeColorPicker,
-          ),
-
-          // Karanlık mod
-          ListTile(
-            leading: const Icon(Icons.dark_mode_outlined),
-            title: const Text('Arayüz Modu'),
-            subtitle: Text(_themeModeLabel(_themeMode)),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                shape: const RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (ctx) => Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Arayüz Modu',
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 12),
-                      _themeModeOption(
-                          ctx, 'Sistem Varsayılanı',
-                          Icons.phone_android, ThemeMode.system),
-                      _themeModeOption(
-                          ctx, 'Açık Mod',
-                          Icons.light_mode, ThemeMode.light),
-                      _themeModeOption(
-                          ctx, 'Karanlık Mod',
-                          Icons.dark_mode, ThemeMode.dark),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-
-          const Divider(),
-
-          // Bildirimler
-          _sectionHeader('Tercihler'),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications_outlined),
-            title: const Text('Bildirimler'),
-            subtitle: const Text('Görev hatırlatıcıları'),
-            value: _notifications,
-            onChanged: (v) => setState(() => _notifications = v),
-          ),
-
-          const Divider(),
-
-          // Veri
-          _sectionHeader('Veri'),
-          ListTile(
-            leading:
-                const Icon(Icons.delete_forever, color: Colors.red),
-            title: const Text('Tüm Verileri Sil',
-                style: TextStyle(color: Colors.red)),
-            subtitle: const Text('Görev ve harcamaları temizle'),
-            onTap: _clearAllData,
-          ),
-
-          const Divider(),
-
-          // Hakkında
-          _sectionHeader('Hakkında'),
-          ListTile(
-            leading: const Icon(Icons.school_outlined),
-            title: const Text('Proje Türü'),
-            subtitle: const Text('Okul Projesi'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.code),
-            title: const Text('Teknoloji'),
-            subtitle: const Text('Flutter + SQLite'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('Versiyon'),
-            subtitle: const Text('1.0.0'),
-          ),
-        ],
+  void _showModePicker() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Arayüz Modu',
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            _themeModeOption(
+                ctx,
+                'Sistem Varsayılanı',
+                Icons.phone_android,
+                ThemeMode.system,
+                'Cihazın ayarını takip eder'),
+            _themeModeOption(
+                ctx,
+                'Açık Mod',
+                Icons.light_mode,
+                ThemeMode.light,
+                'Her zaman açık tema'),
+            _themeModeOption(
+                ctx,
+                'Karanlık Mod',
+                Icons.dark_mode,
+                ThemeMode.dark,
+                'Her zaman koyu tema'),
+          ],
+        ),
       ),
     );
   }
 
   Widget _themeModeOption(BuildContext ctx, String label,
-      IconData icon, ThemeMode mode) {
+      IconData icon, ThemeMode mode, String subtitle) {
     final isSelected = _themeMode == mode;
+    final color = Theme.of(context).colorScheme.primary;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? color.withOpacity(0.08) : null,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? color : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: ListTile(
+        leading:
+            Icon(icon, color: isSelected ? color : null),
+        title: Text(label,
+            style: TextStyle(
+                fontWeight: isSelected
+                    ? FontWeight.bold
+                    : FontWeight.normal)),
+        subtitle: Text(subtitle,
+            style: const TextStyle(fontSize: 12)),
+        trailing: isSelected
+            ? Icon(Icons.check_circle, color: color)
+            : null,
+        onTap: () {
+          setState(() => _themeMode = mode);
+          MyApp.of(context)?.setThemeMode(mode);
+          Navigator.pop(ctx);
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    final selectedColor =
+        AppThemes.themes[_selectedThemeName] ?? Colors.indigo;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Ayarlar'),
+        backgroundColor:
+            Theme.of(context).colorScheme.primaryContainer,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        children: [
+          _sectionHeader('Görünüm'),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 4),
+            child: InkWell(
+              onTap: _showThemeColorPicker,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: selectedColor.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: selectedColor.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: selectedColor,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.palette,
+                          color: Colors.white, size: 22),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          const Text('Renk Teması',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold)),
+                          Text(_selectedThemeName,
+                              style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 14, color: Colors.grey),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 4),
+            child: InkWell(
+              onTap: _showModePicker,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: color.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: color,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        _themeMode == ThemeMode.dark
+                            ? Icons.dark_mode
+                            : _themeMode == ThemeMode.light
+                                ? Icons.light_mode
+                                : Icons.phone_android,
+                        color: Colors.white,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          const Text('Arayüz Modu',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold)),
+                          Text(_themeModeLabel(_themeMode),
+                              style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 14, color: Colors.grey),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+          const Divider(indent: 16, endIndent: 16),
+
+          _sectionHeader('Tercihler'),
+          SwitchListTile(
+            secondary:
+                const Icon(Icons.notifications_outlined),
+            title: const Text('Bildirimler'),
+            subtitle: const Text('Görev hatırlatıcıları'),
+            value: _notifications,
+            onChanged: (v) =>
+                setState(() => _notifications = v),
+          ),
+
+          const Divider(indent: 16, endIndent: 16),
+
+          _sectionHeader('Veri'),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 16, vertical: 4),
+            child: InkWell(
+              onTap: _clearAllData,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: Colors.red.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.delete_forever,
+                          color: Colors.white, size: 22),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          Text('Tüm Verileri Sil',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red)),
+                          Text(
+                              'Görev ve harcamaları temizle',
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios,
+                        size: 14, color: Colors.grey),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+          const Divider(indent: 16, endIndent: 16),
+
+          _sectionHeader('Hakkında'),
+          _infoTile(Icons.school_outlined, 'Proje Türü',
+              'Okul Projesi'),
+          _infoTile(
+              Icons.code, 'Teknoloji', 'Flutter + SQLite'),
+          _infoTile(
+              Icons.info_outline, 'Versiyon', '1.0.0'),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoTile(
+      IconData icon, String title, String subtitle) {
     return ListTile(
       leading: Icon(icon,
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : null),
-      title: Text(label),
-      trailing: isSelected
-          ? Icon(Icons.check,
-              color: Theme.of(context).colorScheme.primary)
-          : null,
-      onTap: () {
-        setState(() => _themeMode = mode);
-        MyApp.of(context)?.setThemeMode(mode);
-        Navigator.pop(ctx);
-      },
+          color: Theme.of(context).colorScheme.primary),
+      title: Text(title),
+      subtitle: Text(subtitle),
     );
   }
 
   String _themeModeLabel(ThemeMode mode) {
     switch (mode) {
-      case ThemeMode.light: return 'Açık Mod';
-      case ThemeMode.dark: return 'Karanlık Mod';
-      default: return 'Sistem Varsayılanı';
+      case ThemeMode.light:
+        return 'Açık Mod';
+      case ThemeMode.dark:
+        return 'Karanlık Mod';
+      default:
+        return 'Sistem Varsayılanı';
     }
   }
 
   Widget _sectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
       child: Text(
-        title,
+        title.toUpperCase(),
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.bold,
           color: Theme.of(context).colorScheme.primary,
-          letterSpacing: 1.2,
+          letterSpacing: 1.4,
         ),
       ),
     );

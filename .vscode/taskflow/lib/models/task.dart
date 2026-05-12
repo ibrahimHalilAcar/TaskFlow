@@ -3,7 +3,7 @@ class Task {
   String title;
   String? description;
   bool isCompleted;
-  String priority; // 'low', 'medium', 'high'
+  String priority;
   DateTime createdAt;
 
   Task({
@@ -16,7 +16,7 @@ class Task {
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {
-    'id': id,
+    if (id != null) 'id': id,
     'title': title,
     'description': description,
     'isCompleted': isCompleted ? 1 : 0,

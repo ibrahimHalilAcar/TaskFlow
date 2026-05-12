@@ -130,19 +130,16 @@ class DBHelper {
   }
 
   Future<List<Expense>> getExpensesByDateRange(
-      DateTime start, DateTime end) async {
-    final db = await database;
-    final maps = await db.query(
-      'expenses',
-      where: 'date BETWEEN ? AND ?',
-      whereArgs: [
-        start.toIso8601String(),
-        end.toIso8601String(),
-      ],
-      orderBy: 'date DESC',
-    );
-    return maps.map((m) => Expense.fromMap(m)).toList();
-  }
+    DateTime start, DateTime end) async {
+  final db = await database;
+  final allExpenses = await db.query('expenses', orderBy: 'date DESC');
+  final all = allExpenses.map((m) => Expense.fromMap(m)).toList();
+  
+  return all.where((e) {
+    return e.date.isAfter(start.subtract(const Duration(seconds: 1))) &&
+        e.date.isBefore(end.add(const Duration(seconds: 1)));
+  }).toList();
+}
 
   // ──────────────── GENEL ────────────────
 

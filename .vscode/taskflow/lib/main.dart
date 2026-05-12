@@ -10,13 +10,22 @@ import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   if (kIsWeb) {
     databaseFactory = databaseFactoryFfiWeb;
-  } else {
+  } else if (_isDesktop()) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
+  // Android ve iOS için hiçbir şey yapma
+
   runApp(const MyApp());
+}
+
+bool _isDesktop() {
+  return defaultTargetPlatform == TargetPlatform.windows ||
+      defaultTargetPlatform == TargetPlatform.macOS ||
+      defaultTargetPlatform == TargetPlatform.linux;
 }
 
 class AppThemes {
@@ -46,8 +55,7 @@ class _MyAppState extends State<MyApp> {
   void setThemeMode(ThemeMode mode) =>
       setState(() => _themeMode = mode);
 
-  void setSeedColor(Color color, String name) =>
-      setState(() {
+  void setSeedColor(Color color, String name) => setState(() {
         _seedColor = color;
         _themeName = name;
       });

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../database/db_helper.dart';
 import '../models/task.dart';
+import '../utils/notification_service.dart';
 
 class TaskScreen extends StatefulWidget {
   const TaskScreen({super.key});
@@ -37,8 +39,9 @@ class _TaskScreenState extends State<TaskScreen> {
   Future<void> _addTask() async {
     if (_titleController.text.trim().isEmpty) return;
     try {
+      final taskTitle = _titleController.text.trim();
       final task = Task(
-        title: _titleController.text.trim(),
+        title: taskTitle,
         description: _descController.text.trim().isEmpty
             ? null
             : _descController.text.trim(),
@@ -50,6 +53,15 @@ class _TaskScreenState extends State<TaskScreen> {
       _descController.clear();
       _selectedPriority = 'medium';
       _selectedDate = DateTime.now();
+
+      if (!kIsWeb) {
+        await NotificationService.instance.showNotification(
+          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title: '✅ Görev Eklendi',
+          body: '"$taskTitle" görevin oluşturuldu.',
+        );
+      }
+
       await _loadTasks();
     } catch (e) {
       if (mounted) {
@@ -239,7 +251,6 @@ class _TaskScreenState extends State<TaskScreen> {
     );
   }
 
-  // onSubmit tipi Future<void> Function() olarak değişti
   Widget _taskForm({
     required BuildContext ctx,
     required String title,
@@ -389,7 +400,9 @@ class _TaskScreenState extends State<TaskScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? color : color.withOpacity(0.1),
+            color: isSelected
+                ? color
+                : color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: color),
           ),
@@ -428,7 +441,8 @@ class _TaskScreenState extends State<TaskScreen> {
       child: Row(
         children: [
           Container(
-            width: 4, height: 18,
+            width: 4,
+            height: 18,
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(2),
@@ -443,7 +457,7 @@ class _TaskScreenState extends State<TaskScreen> {
             padding: const EdgeInsets.symmetric(
                 horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text('$count',
@@ -461,10 +475,12 @@ class _TaskScreenState extends State<TaskScreen> {
   Widget build(BuildContext context) {
     final pending = _tasks.where((t) => !t.isCompleted).toList();
     final completed = _tasks.where((t) => t.isCompleted).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Görevlerim'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        backgroundColor:
+            Theme.of(context).colorScheme.primaryContainer,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -491,11 +507,12 @@ class _TaskScreenState extends State<TaskScreen> {
                   const SizedBox(height: 16),
                   Text('Henüz görev yok',
                       style: TextStyle(
-                          fontSize: 18, color: Colors.grey.shade500)),
+                          fontSize: 18,
+                          color: Colors.grey.shade500)),
                   const SizedBox(height: 8),
                   Text('Aşağıdaki butona bas ve ekle!',
-                      style:
-                          TextStyle(color: Colors.grey.shade400)),
+                      style: TextStyle(
+                          color: Colors.grey.shade400)),
                 ],
               ),
             )
@@ -503,13 +520,13 @@ class _TaskScreenState extends State<TaskScreen> {
               padding: const EdgeInsets.only(bottom: 90),
               children: [
                 if (pending.isNotEmpty) ...[
-                  _listHeader(
-                      'Devam Ediyor', pending.length, Colors.orange),
+                  _listHeader('Devam Ediyor',
+                      pending.length, Colors.orange),
                   ...pending.map((t) => _taskTile(t)),
                 ],
                 if (completed.isNotEmpty) ...[
-                  _listHeader(
-                      'Tamamlandı', completed.length, Colors.green),
+                  _listHeader('Tamamlandı',
+                      completed.length, Colors.green),
                   ...completed.map((t) => _taskTile(t)),
                 ],
               ],
@@ -526,7 +543,8 @@ class _TaskScreenState extends State<TaskScreen> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Görevi Sil'),
-          content: Text('"${task.title}" silinecek. Emin misin?'),
+          content:
+              Text('"${task.title}" silinecek. Emin misin?'),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
@@ -543,7 +561,8 @@ class _TaskScreenState extends State<TaskScreen> {
       ),
       onDismissed: (_) => _deleteTask(task.id!),
       background: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        margin: const EdgeInsets.symmetric(
+            horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
           color: Colors.red.shade400,
           borderRadius: BorderRadius.circular(12),
@@ -555,8 +574,8 @@ class _TaskScreenState extends State<TaskScreen> {
           children: [
             Icon(Icons.delete, color: Colors.white),
             Text('Sil',
-                style:
-                    TextStyle(color: Colors.white, fontSize: 12)),
+                style: TextStyle(
+                    color: Colors.white, fontSize: 12)),
           ],
         ),
       ),
@@ -571,11 +590,11 @@ class _TaskScreenState extends State<TaskScreen> {
             border: Border.all(
               color: task.isCompleted
                   ? Colors.grey.shade200
-                  : color.withOpacity(0.3),
+                  : color.withValues(alpha: 0.3),
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 6,
                 offset: const Offset(0, 2),
               ),
@@ -587,7 +606,8 @@ class _TaskScreenState extends State<TaskScreen> {
             leading: GestureDetector(
               onTap: () => _toggleTask(task),
               child: Container(
-                width: 28, height: 28,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: task.isCompleted
@@ -634,7 +654,7 @@ class _TaskScreenState extends State<TaskScreen> {
               padding: const EdgeInsets.symmetric(
                   horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(

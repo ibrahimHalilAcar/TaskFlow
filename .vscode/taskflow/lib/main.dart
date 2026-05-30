@@ -7,6 +7,7 @@ import 'screens/task_screen.dart';
 import 'screens/expense_screen.dart';
 import 'screens/stats_screen.dart';
 import 'screens/settings_screen.dart';
+import 'utils/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +18,10 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  // Android ve iOS için hiçbir şey yapma
+
+  if (!kIsWeb) {
+    await NotificationService.instance.init();
+  }
 
   runApp(const MyApp());
 }

@@ -386,19 +386,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          const SizedBox(height: 8),
-          const Divider(indent: 16, endIndent: 16),
-
-          _sectionHeader('Tercihler'),
-          SwitchListTile(
-            secondary:
-                const Icon(Icons.notifications_outlined),
-            title: const Text('Bildirimler'),
-            subtitle: const Text('Görev hatırlatıcıları'),
-            value: _notifications,
-            onChanged: (v) =>
-                setState(() => _notifications = v),
-          ),
+          
+          
 
           const Divider(indent: 16, endIndent: 16),
 
